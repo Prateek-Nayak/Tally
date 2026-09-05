@@ -118,11 +118,28 @@ work — and it means there is no REST endpoint a client could hit to
 insert a row that skips that check. If a new feature needs a new kind of
 write, it gets a new RPC, not a new INSERT policy.
 
+## 15. Disambiguate embeds across tables with multiple foreign keys
+
+`group_members` has four foreign keys to `profiles` (`user_id`,
+`claimed_by`, `added_by`, `deleted_by`) — deliberately, for auditability
+and ghost-member claiming. That means `profiles(name)` embedded from
+`group_members` is ambiguous to PostgREST and will error at query time,
+not at migration time — it doesn't show up until someone actually loads
+the screen. Always disambiguate with the column name: `profiles!user_id`.
+Before adding any new embed, check whether the table you're embedding
+*from* has more than one FK to the table you're embedding.
+
 ## PR checklist
 
 - [ ] New table: RLS enabled + **both** a `select` policy and a way to
       write to it (an RPC, not an `insert` policy) — RLS-enabled-but-no-
       policy silently blocks everything, including the owner
+- [ ] New embed across a foreign key: check whether the source table has
+      more than one FK to the target table — if so, use `!column_name`
+      to disambiguate, or it errors at runtime, not at review time
+- [ ] New query hook: its `error` state is actually rendered somewhere,
+      not just its `data` — a silently-swallowed error looks identical to
+      "empty" and is far harder to debug from a bug report
 - [ ] New mutation: has an audit trigger if it touches an audited table
 - [ ] New mutation: idempotency enforced inside the RPC itself, not just
       a header the client sends and nothing checks

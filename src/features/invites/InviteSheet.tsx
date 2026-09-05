@@ -15,7 +15,7 @@ export function InviteSheet({
   isAdmin: boolean;
   onClose: () => void;
 }) {
-  const { data: link, isLoading: linkLoading } = useActiveInviteLink(groupId);
+  const { data: link, isLoading: linkLoading, error: linkError } = useActiveInviteLink(groupId);
   const createLink = useCreateInviteLink(groupId);
   const revokeLink = useRevokeInviteLink(groupId);
   const inviteByEmail = useInviteByEmail(groupId);
@@ -61,6 +61,8 @@ export function InviteSheet({
           <div style={{ fontSize: 12, color: COLORS.inkSoft, marginBottom: 6 }}>Shareable link</div>
           {linkLoading ? (
             <p style={{ fontSize: 13, color: COLORS.inkSoft }}>Loading…</p>
+          ) : linkError ? (
+            <p style={{ fontSize: 13, color: COLORS.red }}>Couldn't check the invite link. Try again.</p>
           ) : link ? (
             <div>
               <div

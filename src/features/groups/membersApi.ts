@@ -14,7 +14,7 @@ interface MemberRow {
 export async function listGroupMembers(groupId: string): Promise<Member[]> {
   const { data, error } = await supabase
     .from("group_members")
-    .select("id, group_id, user_id, display_name, role, joined_at, profile:profiles(name)")
+    .select("id, group_id, user_id, display_name, role, joined_at, profile:profiles!user_id(name)")
     .eq("group_id", groupId)
     .is("deleted_at", null)
     .order("joined_at", { ascending: true });

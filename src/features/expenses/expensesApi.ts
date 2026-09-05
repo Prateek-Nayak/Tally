@@ -15,7 +15,7 @@ export async function listGroupExpenses(groupId: string): Promise<ExpenseListIte
   const { data, error } = await supabase
     .from("expenses")
     .select(
-      "id, group_id, description, amount_paise, created_at, paid_by_member:group_members!paid_by(display_name, profile:profiles(name)), splits:expense_splits(count)",
+      "id, group_id, description, amount_paise, created_at, paid_by_member:group_members!paid_by(display_name, profile:profiles!user_id(name)), splits:expense_splits(count)",
     )
     .eq("group_id", groupId)
     .is("deleted_at", null)

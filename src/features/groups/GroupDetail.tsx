@@ -10,7 +10,7 @@ import { InviteSheet } from "../invites/InviteSheet";
 
 export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; groupName: string; onBack: () => void }) {
   const { session } = useSession();
-  const { data: members, isLoading: membersLoading } = useMembers(groupId);
+  const { data: members, isLoading: membersLoading, error: membersError } = useMembers(groupId);
   const { data: expenses, isLoading: expensesLoading, error: expensesError } = useExpenses(groupId);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -79,6 +79,7 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
         </div>
 
         {membersLoading && <p style={{ color: COLORS.inkSoft, fontSize: 13 }}>Loading…</p>}
+        {membersError && <p style={{ color: COLORS.red, fontSize: 13 }}>Couldn't load the people in this group.</p>}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
           {members?.map((m) => (
             <span
