@@ -3,6 +3,77 @@ import { COLORS_LIGHT as COLORS } from "../../shared/theme/colors";
 import { useGroups } from "./useGroups";
 import { NewGroupSheet } from "./NewGroupSheet";
 import { signOut } from "../auth/authApi";
+import { usePendingInvites, useRespondToInvite } from "../invites/useInvites";
+import { newIdempotencyKey } from "../../lib/api/idempotency";
+
+function PendingInvites() {
+  const { data: invites } = usePendingInvites();
+  const respond = useRespondToInvite();
+
+  if (!invites || invites.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 15, color: COLORS.heading, marginBottom: 8 }}>
+        Invites waiting for you
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {invites.map((invite) => (
+          <div
+            key={invite.id}
+            style={{
+              background: COLORS.goldSoft,
+              border: `1px solid ${COLORS.gold}`,
+              borderRadius: 10,
+              padding: "11px 14px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: COLORS.ink }}>{invite.group_name}</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+                type="button"
+                onClick={() => respond.mutate({ inviteId: invite.id, accept: true, idempotencyKey: newIdempotencyKey() })}
+                disabled={respond.isPending}
+                style={{
+                  background: COLORS.action,
+                  color: COLORS.onAction,
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                onClick={() => respond.mutate({ inviteId: invite.id, accept: false, idempotencyKey: newIdempotencyKey() })}
+                disabled={respond.isPending}
+                style={{
+                  background: "transparent",
+                  color: COLORS.inkSoft,
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function GroupsHome({ onSelectGroup }: { onSelectGroup: (id: string, name: string) => void }) {
   const { data: groups, isLoading, error } = useGroups();
@@ -36,6 +107,8 @@ export function GroupsHome({ onSelectGroup }: { onSelectGroup: (id: string, name
       </div>
 
       <div style={{ padding: 16 }}>
+        <PendingInvites />
+
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 15, color: COLORS.heading }}>
             Groups

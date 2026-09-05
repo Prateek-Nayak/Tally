@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { COLORS_LIGHT as COLORS } from "../../shared/theme/colors";
 import { formatPaise } from "../../shared/lib/money";
+import { useSession } from "../auth/useSession";
 import { useMembers } from "./useMembers";
 import { AddMemberSheet } from "./AddMemberSheet";
 import { useExpenses } from "../expenses/useExpenses";
 import { AddExpenseSheet } from "../expenses/AddExpenseSheet";
+import { InviteSheet } from "../invites/InviteSheet";
 
 export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; groupName: string; onBack: () => void }) {
+  const { session } = useSession();
   const { data: members, isLoading: membersLoading } = useMembers(groupId);
   const { data: expenses, isLoading: expensesLoading, error: expensesError } = useExpenses(groupId);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+
+  const me = members?.find((m) => m.user_id === session?.user.id);
+  const isAdmin = me?.role === "admin";
 
   return (
     <div style={{ minHeight: "100dvh", background: COLORS.bg, fontFamily: "Inter, sans-serif" }}>
@@ -33,23 +40,42 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 14, color: COLORS.heading }}>
             People
           </div>
-          <button
-            type="button"
-            onClick={() => setShowAddMember(true)}
-            style={{
-              background: "transparent",
-              border: `1px solid ${COLORS.gold}`,
-              color: COLORS.gold,
-              borderRadius: 999,
-              padding: "5px 11px",
-              fontSize: 12,
-              fontWeight: 600,
-              fontFamily: "Inter, sans-serif",
-              cursor: "pointer",
-            }}
-          >
-            + Add person
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setShowInvite(true)}
+              style={{
+                background: "transparent",
+                border: `1px solid ${COLORS.navy}`,
+                color: COLORS.navy,
+                borderRadius: 999,
+                padding: "5px 11px",
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: "Inter, sans-serif",
+                cursor: "pointer",
+              }}
+            >
+              Invite
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddMember(true)}
+              style={{
+                background: "transparent",
+                border: `1px solid ${COLORS.gold}`,
+                color: COLORS.gold,
+                borderRadius: 999,
+                padding: "5px 11px",
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: "Inter, sans-serif",
+                cursor: "pointer",
+              }}
+            >
+              + Add person
+            </button>
+          </div>
         </div>
 
         {membersLoading && <p style={{ color: COLORS.inkSoft, fontSize: 13 }}>Loading…</p>}
@@ -145,6 +171,7 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
       </div>
 
       {showAddMember && <AddMemberSheet groupId={groupId} onClose={() => setShowAddMember(false)} />}
+      {showInvite && <InviteSheet groupId={groupId} isAdmin={isAdmin} onClose={() => setShowInvite(false)} />}
       {showAddExpense && members && (
         <AddExpenseSheet groupId={groupId} members={members} onClose={() => setShowAddExpense(false)} />
       )}
