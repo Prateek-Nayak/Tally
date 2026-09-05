@@ -4,7 +4,7 @@ import { useGroups } from "./useGroups";
 import { NewGroupSheet } from "./NewGroupSheet";
 import { signOut } from "../auth/authApi";
 
-export function GroupsHome() {
+export function GroupsHome({ onSelectGroup }: { onSelectGroup: (id: string, name: string) => void }) {
   const { data: groups, isLoading, error } = useGroups();
   const [showNewGroup, setShowNewGroup] = useState(false);
 
@@ -82,6 +82,9 @@ export function GroupsHome() {
           {groups?.map((group) => (
             <div
               key={group.id}
+              onClick={() => onSelectGroup(group.id, group.name)}
+              role="button"
+              tabIndex={0}
               style={{
                 background: COLORS.surface,
                 border: `1px solid ${COLORS.border}`,
@@ -90,6 +93,7 @@ export function GroupsHome() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                cursor: "pointer",
               }}
             >
               <div>
