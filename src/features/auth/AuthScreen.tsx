@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { COLORS_LIGHT as COLORS } from "../../shared/theme/colors";
 import { signIn, signUp, requestPasswordReset, updatePassword } from "./authApi";
 import { validateEmail, validatePassword, validateName } from "./validators";
@@ -8,13 +9,15 @@ type Mode = "login" | "signup" | "forgot";
 const inputStyle: React.CSSProperties = {
   width: "100%",
   boxSizing: "border-box",
+  minHeight: 44,
+  padding: "10px 12px",
   border: `1px solid ${COLORS.border}`,
   borderRadius: 8,
-  padding: "10px 12px",
   fontSize: 14,
   fontFamily: "Inter, sans-serif",
   color: COLORS.ink,
   background: COLORS.field,
+  outline: "none",
 };
 
 const labelStyle: React.CSSProperties = {
@@ -41,16 +44,18 @@ function PrimaryButton({ children, busy }: { children: React.ReactNode; busy: bo
       disabled={busy}
       style={{
         width: "100%",
-        padding: "12px 16px",
+        minHeight: 44,
+        padding: "13px 16px",
         borderRadius: 10,
         border: "none",
         background: COLORS.action,
         color: COLORS.onAction,
         fontFamily: "Inter, sans-serif",
         fontWeight: 600,
-        fontSize: 14,
+        fontSize: 15,
+        marginTop: 6,
         cursor: busy ? "default" : "pointer",
-        opacity: busy ? 0.7 : 1,
+        opacity: busy ? 0.6 : 1,
       }}
     >
       {children}
@@ -65,10 +70,11 @@ function LinkButton({ children, onClick }: { children: React.ReactNode; onClick:
       onClick={onClick}
       style={{
         display: "block",
-        margin: "12px auto 0",
+        margin: "14px auto 0",
         background: "transparent",
         border: "none",
         color: COLORS.navy,
+        fontWeight: 600,
         fontSize: 12.5,
         fontFamily: "Inter, sans-serif",
         cursor: "pointer",
@@ -77,6 +83,30 @@ function LinkButton({ children, onClick }: { children: React.ReactNode; onClick:
     >
       {children}
     </button>
+  );
+}
+
+function Notice({ kind, children }: { kind: "error" | "info"; children: React.ReactNode }) {
+  const isError = kind === "error";
+  const color = isError ? COLORS.red : COLORS.green;
+  const bg = isError ? COLORS.redSoft : COLORS.greenSoft;
+  const Icon = isError ? AlertTriangle : CheckCircle2;
+  return (
+    <div
+      style={{
+        background: bg,
+        border: `1px solid ${color}`,
+        borderRadius: 10,
+        padding: "10px 12px",
+        marginBottom: 16,
+        display: "flex",
+        gap: 8,
+        alignItems: "flex-start",
+      }}
+    >
+      <Icon size={15} color={color} style={{ flexShrink: 0, marginTop: 1 }} />
+      <div style={{ fontSize: 12.5, color: COLORS.ink, fontFamily: "Inter, sans-serif" }}>{children}</div>
+    </div>
   );
 }
 
@@ -169,227 +199,199 @@ export function AuthScreen({ isRecovery }: Props) {
     }
   }
 
-  const title = isRecovery
-    ? "Set new password"
+  const description = isRecovery
+    ? "Enter your new password below."
     : mode === "forgot"
-      ? "Reset password"
+      ? "Enter your email and we'll send you a reset link."
       : mode === "signup"
-        ? "Create account"
-        : "Sign in";
+        ? "You'll show up under this name in your groups."
+        : "Sign in to see your groups and balances.";
 
   return (
     <div
       style={{
         minHeight: "100dvh",
         background: COLORS.bg,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        display: "grid",
+        placeItems: "center",
         padding: 20,
+        fontFamily: "Inter, sans-serif",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 340 }}>
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 26, color: COLORS.heading }}>
-            Tally
-          </div>
-          <div
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 11,
-              color: COLORS.gold,
-              marginTop: 2,
-              letterSpacing: 0.5,
-            }}
-          >
-            SHARED EXPENSES
-          </div>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          background: COLORS.surface,
+          borderRadius: 18,
+          padding: 24,
+          boxShadow: "0 12px 40px rgba(0,0,0,.10)",
+          border: `1px solid ${COLORS.border}`,
+        }}
+      >
+        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 700, color: COLORS.heading }}>
+          Tally
         </div>
-
         <div
           style={{
-            background: COLORS.surface,
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: 14,
-            padding: "20px 18px",
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 10.5,
+            color: COLORS.gold,
+            letterSpacing: 0.5,
+            marginTop: 2,
+            marginBottom: 20,
           }}
         >
-          <h1
-            style={{
-              fontFamily: "'Fraunces', serif",
-              fontWeight: 600,
-              fontSize: 18,
-              color: COLORS.heading,
-              margin: "0 0 4px",
-            }}
-          >
-            {title}
-          </h1>
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12.5, color: COLORS.inkSoft, margin: "0 0 16px" }}>
-            {isRecovery
-              ? "Enter your new password below."
-              : mode === "forgot"
-                ? "Enter your email and we'll send you a reset link."
-                : mode === "signup"
-                  ? "You'll show up under this name in your groups."
-                  : "Sign in to see your groups and balances."}
-          </p>
+          SHARED EXPENSES
+        </div>
 
-          {error && (
-            <p style={{ fontSize: 12, color: COLORS.red, marginBottom: 12, fontFamily: "Inter, sans-serif" }}>
-              {error}
-            </p>
-          )}
-          {info && (
-            <p style={{ fontSize: 12, color: COLORS.green, marginBottom: 12, fontFamily: "Inter, sans-serif" }}>
-              {info}
-            </p>
-          )}
+        <div style={{ color: COLORS.inkSoft, fontSize: 13.5, marginBottom: 20 }}>{description}</div>
 
-          {isRecovery ? (
-            <form onSubmit={handleRecoverySubmit}>
-              <Field label="New password">
+        {error && <Notice kind="error">{error}</Notice>}
+        {info && <Notice kind="info">{info}</Notice>}
+
+        {isRecovery ? (
+          <form onSubmit={handleRecoverySubmit}>
+            <Field label="New password">
+              <input
+                style={inputStyle}
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters, 1 uppercase, 1 number"
+              />
+            </Field>
+            <Field label="Confirm new password">
+              <input
+                style={inputStyle}
+                type="password"
+                autoComplete="new-password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder="Re-enter your password"
+              />
+            </Field>
+            <PrimaryButton busy={busy}>{busy ? "Please wait…" : "Update password"}</PrimaryButton>
+          </form>
+        ) : mode === "forgot" ? (
+          <form onSubmit={handleForgotSubmit}>
+            <Field label="Email">
+              <input
+                style={inputStyle}
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </Field>
+            <PrimaryButton busy={busy}>{busy ? "Please wait…" : "Send reset link"}</PrimaryButton>
+            <LinkButton
+              onClick={() => {
+                setMode("login");
+                resetNotices();
+              }}
+            >
+              Back to sign in
+            </LinkButton>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            {mode === "signup" && (
+              <Field label="Name">
                 <input
                   style={inputStyle}
-                  type="password"
-                  autoComplete="new-password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="At least 8 characters, 1 uppercase, 1 number"
+                  type="text"
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="How you'll appear in your groups"
                 />
               </Field>
-              <Field label="Confirm new password">
+            )}
+            <Field label="Email">
+              <input
+                style={inputStyle}
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </Field>
+            <Field label="Password">
+              <input
+                style={inputStyle}
+                type="password"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={mode === "signup" ? "At least 8 chars, 1 uppercase, 1 number" : "Enter your password"}
+              />
+            </Field>
+            {mode === "signup" && (
+              <Field label="Confirm password">
                 <input
                   style={inputStyle}
                   type="password"
                   autoComplete="new-password"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter your password"
                 />
               </Field>
-              <PrimaryButton busy={busy}>{busy ? "Please wait…" : "Update password"}</PrimaryButton>
-            </form>
-          ) : mode === "forgot" ? (
-            <form onSubmit={handleForgotSubmit}>
-              <Field label="Email">
-                <input
-                  style={inputStyle}
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                />
-              </Field>
-              <PrimaryButton busy={busy}>{busy ? "Please wait…" : "Send reset link"}</PrimaryButton>
+            )}
+
+            <PrimaryButton busy={busy}>
+              {busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
+            </PrimaryButton>
+
+            {mode === "login" && (
               <LinkButton
                 onClick={() => {
-                  setMode("login");
+                  setMode("forgot");
                   resetNotices();
                 }}
               >
-                Back to sign in
+                Forgot password?
               </LinkButton>
-            </form>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              {mode === "signup" && (
-                <Field label="Name">
-                  <input
-                    style={inputStyle}
-                    type="text"
-                    autoComplete="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="How you'll appear in your groups"
-                  />
-                </Field>
-              )}
-              <Field label="Email">
-                <input
-                  style={inputStyle}
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                />
-              </Field>
-              <Field label="Password">
-                <input
-                  style={inputStyle}
-                  type="password"
-                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === "signup" ? "At least 8 chars, 1 uppercase, 1 number" : "Enter your password"}
-                />
-              </Field>
-              {mode === "signup" && (
-                <Field label="Confirm password">
-                  <input
-                    style={inputStyle}
-                    type="password"
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your password"
-                  />
-                </Field>
-              )}
-              <div style={{ marginTop: 4 }}>
-                <PrimaryButton busy={busy}>
-                  {busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
-                </PrimaryButton>
-              </div>
+            )}
 
-              {mode === "login" && (
-                <LinkButton
-                  onClick={() => {
-                    setMode("forgot");
-                    resetNotices();
-                  }}
-                >
-                  Forgot password?
-                </LinkButton>
-              )}
-
-              <div
+            <div
+              style={{
+                textAlign: "center",
+                marginTop: 18,
+                paddingTop: 16,
+                borderTop: `1px solid ${COLORS.border}`,
+                fontSize: 12.5,
+                fontFamily: "Inter, sans-serif",
+                color: COLORS.inkSoft,
+              }}
+            >
+              {mode === "signup" ? "Already have an account?" : "New here?"}{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(mode === "signup" ? "login" : "signup");
+                  resetNotices();
+                }}
                 style={{
-                  textAlign: "center",
-                  marginTop: 16,
-                  paddingTop: 14,
-                  borderTop: `1px solid ${COLORS.border}`,
+                  background: "transparent",
+                  border: "none",
+                  color: COLORS.navy,
+                  fontWeight: 600,
                   fontSize: 12.5,
                   fontFamily: "Inter, sans-serif",
-                  color: COLORS.inkSoft,
+                  cursor: "pointer",
+                  padding: 0,
                 }}
               >
-                {mode === "signup" ? "Already have an account?" : "New here?"}{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode(mode === "signup" ? "login" : "signup");
-                    resetNotices();
-                  }}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: COLORS.navy,
-                    fontWeight: 600,
-                    fontSize: 12.5,
-                    fontFamily: "Inter, sans-serif",
-                    cursor: "pointer",
-                    padding: 0,
-                  }}
-                >
-                  {mode === "signup" ? "Sign in" : "Create one"}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
+                {mode === "signup" ? "Sign in" : "Create one"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
