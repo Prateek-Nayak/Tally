@@ -106,11 +106,26 @@ placeholder values. Supabase service-role keys never touch client code.
 See `PRIVACY.md`. It's a starting draft, not legal advice — have it
 reviewed before this goes anywhere near a stranger's financial data.
 
+## 14. Writes go through RPCs, not raw REST inserts
+
+Base tables get RLS `select` and admin-only `update` (restore) policies —
+deliberately **no `insert` policy for the `authenticated` role**. Every
+mutation goes through a `security definer` Postgres function
+(`create_group`, and its siblings that will follow for expenses,
+settlements, etc.). This is where idempotency (rule #1) is actually
+enforced — the function checks `idempotency_keys` itself before doing any
+work — and it means there is no REST endpoint a client could hit to
+insert a row that skips that check. If a new feature needs a new kind of
+write, it gets a new RPC, not a new INSERT policy.
+
 ## PR checklist
 
-- [ ] New table: RLS enabled + at least one policy, in the same migration
+- [ ] New table: RLS enabled + **both** a `select` policy and a way to
+      write to it (an RPC, not an `insert` policy) — RLS-enabled-but-no-
+      policy silently blocks everything, including the owner
 - [ ] New mutation: has an audit trigger if it touches an audited table
-- [ ] New endpoint: validates input with `zod`, honors `Idempotency-Key`
+- [ ] New mutation: idempotency enforced inside the RPC itself, not just
+      a header the client sends and nothing checks
 - [ ] New screen: wrapped in an `ErrorBoundary`
 - [ ] No raw hex colors — use `shared/theme/colors.ts`
 - [ ] No amount stored/passed as a float rupee value

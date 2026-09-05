@@ -1,114 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { COLORS_LIGHT as COLORS } from "../../shared/theme/colors";
+import { Field, PrimaryButton, LinkButton, Notice } from "../../shared/components/formControls";
+import { inputStyle } from "../../shared/theme/inputStyle";
 import { signIn, signUp, requestPasswordReset, updatePassword } from "./authApi";
 import { validateEmail, validatePassword, validateName } from "./validators";
 
 type Mode = "login" | "signup" | "forgot";
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  boxSizing: "border-box",
-  minHeight: 44,
-  padding: "10px 12px",
-  border: `1px solid ${COLORS.border}`,
-  borderRadius: 8,
-  fontSize: 14,
-  fontFamily: "Inter, sans-serif",
-  color: COLORS.ink,
-  background: COLORS.field,
-  outline: "none",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: 12,
-  color: COLORS.inkSoft,
-  marginBottom: 4,
-  fontFamily: "Inter, sans-serif",
-};
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 12 }}>
-      <label style={labelStyle}>{label}</label>
-      {children}
-    </div>
-  );
-}
-
-function PrimaryButton({ children, busy }: { children: React.ReactNode; busy: boolean }) {
-  return (
-    <button
-      type="submit"
-      disabled={busy}
-      style={{
-        width: "100%",
-        minHeight: 44,
-        padding: "13px 16px",
-        borderRadius: 10,
-        border: "none",
-        background: COLORS.action,
-        color: COLORS.onAction,
-        fontFamily: "Inter, sans-serif",
-        fontWeight: 600,
-        fontSize: 15,
-        marginTop: 6,
-        cursor: busy ? "default" : "pointer",
-        opacity: busy ? 0.6 : 1,
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function LinkButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: "block",
-        margin: "14px auto 0",
-        background: "transparent",
-        border: "none",
-        color: COLORS.navy,
-        fontWeight: 600,
-        fontSize: 12.5,
-        fontFamily: "Inter, sans-serif",
-        cursor: "pointer",
-        padding: 0,
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Notice({ kind, children }: { kind: "error" | "info"; children: React.ReactNode }) {
-  const isError = kind === "error";
-  const color = isError ? COLORS.red : COLORS.green;
-  const bg = isError ? COLORS.redSoft : COLORS.greenSoft;
-  const Icon = isError ? AlertTriangle : CheckCircle2;
-  return (
-    <div
-      style={{
-        background: bg,
-        border: `1px solid ${color}`,
-        borderRadius: 10,
-        padding: "10px 12px",
-        marginBottom: 16,
-        display: "flex",
-        gap: 8,
-        alignItems: "flex-start",
-      }}
-    >
-      <Icon size={15} color={color} style={{ flexShrink: 0, marginTop: 1 }} />
-      <div style={{ fontSize: 12.5, color: COLORS.ink, fontFamily: "Inter, sans-serif" }}>{children}</div>
-    </div>
-  );
-}
 
 interface Props {
   /** True when the user arrived via a password-reset email link. */
