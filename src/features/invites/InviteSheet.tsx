@@ -19,6 +19,7 @@ export function InviteSheet({
   const createLink = useCreateInviteLink(groupId);
   const revokeLink = useRevokeInviteLink(groupId);
   const inviteByEmail = useInviteByEmail(groupId);
+  const [linkActionError, setLinkActionError] = useState("");
 
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -36,6 +37,24 @@ export function InviteSheet({
     } catch {
       // Clipboard API can fail (permissions, non-secure context); the link
       // text is still selectable/visible, so this isn't a dead end.
+    }
+  }
+
+  async function handleGenerateLink() {
+    setLinkActionError("");
+    try {
+      await createLink.mutateAsync(newIdempotencyKey());
+    } catch (err) {
+      setLinkActionError(err instanceof Error ? err.message : "Could not generate the link.");
+    }
+  }
+
+  async function handleRevokeLink() {
+    setLinkActionError("");
+    try {
+      await revokeLink.mutateAsync(newIdempotencyKey());
+    } catch (err) {
+      setLinkActionError(err instanceof Error ? err.message : "Could not revoke the link.");
     }
   }
 
@@ -59,6 +78,7 @@ export function InviteSheet({
       {isAdmin && (
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, color: COLORS.inkSoft, marginBottom: 6 }}>Shareable link</div>
+          {linkActionError && <Notice kind="error">{linkActionError}</Notice>}
           {linkLoading ? (
             <p style={{ fontSize: 13, color: COLORS.inkSoft }}>Loading…</p>
           ) : linkError ? (
@@ -97,7 +117,7 @@ export function InviteSheet({
                 </button>
                 <button
                   type="button"
-                  onClick={() => revokeLink.mutate(newIdempotencyKey())}
+                  onClick={() => void handleRevokeLink()}
                   disabled={revokeLink.isPending}
                   style={{
                     flex: 1,
@@ -111,7 +131,7 @@ export function InviteSheet({
                     cursor: "pointer",
                   }}
                 >
-                  Revoke
+                  {revokeLink.isPending ? "Revoking…" : "Revoke"}
                 </button>
               </div>
               <p style={{ fontSize: 11.5, color: COLORS.inkSoft, marginTop: 6 }}>
@@ -119,7 +139,7 @@ export function InviteSheet({
               </p>
             </div>
           ) : (
-            <PrimaryButton busy={createLink.isPending} onClick={() => createLink.mutate(newIdempotencyKey())}>
+            <PrimaryButton type="button" busy={createLink.isPending} onClick={() => void handleGenerateLink()}>
               {createLink.isPending ? "Generating…" : "Generate invite link"}
             </PrimaryButton>
           )}
