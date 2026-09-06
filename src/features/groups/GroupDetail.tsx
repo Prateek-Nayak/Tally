@@ -8,7 +8,9 @@ import { MemberRow } from "./MemberRow";
 import { AddMemberSheet } from "./AddMemberSheet";
 import { useExpenses } from "../expenses/useExpenses";
 import { AddExpenseSheet } from "../expenses/AddExpenseSheet";
+import { ExpenseDetailSheet } from "../expenses/ExpenseDetailSheet";
 import { InviteSheet } from "../invites/InviteSheet";
+import { SettleUpSheet } from "../settlements/SettleUpSheet";
 
 export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; groupName: string; onBack: () => void }) {
   const { session } = useSession();
@@ -18,9 +20,12 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [showSettleUp, setShowSettleUp] = useState(false);
+  const [openExpenseId, setOpenExpenseId] = useState<string | null>(null);
 
   const me = members?.find((m) => m.user_id === session?.user.id);
   const isAdmin = me?.role === "admin";
+  const myBalance = me ? balances?.[me.id] : undefined;
 
   return (
     <div style={{ minHeight: "100dvh", background: COLORS.bg, fontFamily: "Inter, sans-serif" }}>
@@ -39,6 +44,36 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
       </div>
 
       <div style={{ padding: 16 }}>
+        {myBalance !== undefined && (
+          <div
+            style={{
+              background: myBalance === 0 ? COLORS.chip : myBalance > 0 ? COLORS.greenSoft : COLORS.redSoft,
+              borderRadius: 12,
+              padding: "12px 14px",
+              marginBottom: 16,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <span style={{ fontSize: 13, color: COLORS.ink }}>
+              {myBalance === 0 ? "You're settled up here" : myBalance > 0 ? "You get back" : "You owe"}
+            </span>
+            {myBalance !== 0 && (
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: myBalance > 0 ? COLORS.green : COLORS.red,
+                }}
+              >
+                {formatPaise(Math.abs(myBalance))}
+              </span>
+            )}
+          </div>
+        )}
+
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 14, color: COLORS.heading }}>
             People
@@ -96,25 +131,46 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 14, color: COLORS.heading }}>
             Expenses
           </div>
-          <button
-            type="button"
-            onClick={() => setShowAddExpense(true)}
-            disabled={!members || members.length === 0}
-            style={{
-              background: COLORS.action,
-              color: COLORS.onAction,
-              border: "none",
-              borderRadius: 999,
-              padding: "7px 14px",
-              fontSize: 12.5,
-              fontWeight: 600,
-              fontFamily: "Inter, sans-serif",
-              cursor: members && members.length > 0 ? "pointer" : "default",
-              opacity: members && members.length > 0 ? 1 : 0.5,
-            }}
-          >
-            + Add expense
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setShowSettleUp(true)}
+              disabled={!members || members.length < 2}
+              style={{
+                background: "transparent",
+                border: `1px solid ${COLORS.gold}`,
+                color: COLORS.gold,
+                borderRadius: 999,
+                padding: "7px 14px",
+                fontSize: 12.5,
+                fontWeight: 600,
+                fontFamily: "Inter, sans-serif",
+                cursor: members && members.length >= 2 ? "pointer" : "default",
+                opacity: members && members.length >= 2 ? 1 : 0.5,
+              }}
+            >
+              Settle up
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddExpense(true)}
+              disabled={!members || members.length === 0}
+              style={{
+                background: COLORS.action,
+                color: COLORS.onAction,
+                border: "none",
+                borderRadius: 999,
+                padding: "7px 14px",
+                fontSize: 12.5,
+                fontWeight: 600,
+                fontFamily: "Inter, sans-serif",
+                cursor: members && members.length > 0 ? "pointer" : "default",
+                opacity: members && members.length > 0 ? 1 : 0.5,
+              }}
+            >
+              + Add expense
+            </button>
+          </div>
         </div>
 
         {expensesLoading && <p style={{ color: COLORS.inkSoft, fontSize: 13 }}>Loading…</p>}
@@ -140,6 +196,9 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
           {expenses?.map((exp) => (
             <div
               key={exp.id}
+              onClick={() => setOpenExpenseId(exp.id)}
+              role="button"
+              tabIndex={0}
               style={{
                 background: COLORS.surface,
                 border: `1px solid ${COLORS.border}`,
@@ -148,6 +207,7 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                cursor: "pointer",
               }}
             >
               <div>
@@ -168,6 +228,19 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
       {showInvite && <InviteSheet groupId={groupId} isAdmin={isAdmin} onClose={() => setShowInvite(false)} />}
       {showAddExpense && members && (
         <AddExpenseSheet groupId={groupId} members={members} onClose={() => setShowAddExpense(false)} />
+      )}
+      {showSettleUp && members && (
+        <SettleUpSheet groupId={groupId} members={members} onClose={() => setShowSettleUp(false)} />
+      )}
+      {openExpenseId && members && (
+        <ExpenseDetailSheet
+          groupId={groupId}
+          expenseId={openExpenseId}
+          members={members}
+          currentUserId={session?.user.id}
+          isAdmin={isAdmin}
+          onClose={() => setOpenExpenseId(null)}
+        />
       )}
     </div>
   );

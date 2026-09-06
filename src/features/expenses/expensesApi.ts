@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/api/supabaseClient";
-import type { ExpenseListItem } from "./types";
+import type { ExpenseListItem, ExpenseDetail } from "./types";
 
 interface ExpenseRow {
   id: string;
@@ -47,6 +47,77 @@ export async function addExpense(
     p_amount_paise: amountPaise,
     p_paid_by: paidByMemberId,
     p_member_ids: splitMemberIds,
+    p_idempotency_key: idempotencyKey,
+  });
+  if (error) throw error;
+  return data;
+}
+
+interface ExpenseDetailRow {
+  id: string;
+  group_id: string;
+  description: string;
+  amount_paise: number;
+  paid_by: string;
+  created_by: string;
+  created_at: string;
+  expense_splits: {
+    member_id: string;
+    share_paise: number;
+    member: { display_name: string | null; profile: { name: string } | null } | null;
+  }[];
+}
+
+export async function getExpenseDetail(expenseId: string): Promise<ExpenseDetail> {
+  const { data, error } = await supabase
+    .from("expenses")
+    .select(
+      "id, group_id, description, amount_paise, paid_by, created_by, created_at, expense_splits(member_id, share_paise, member:group_members(display_name, profile:profiles!user_id(name)))",
+    )
+    .eq("id", expenseId)
+    .single();
+  if (error) throw error;
+
+  const row = data as unknown as ExpenseDetailRow;
+  return {
+    id: row.id,
+    group_id: row.group_id,
+    description: row.description,
+    amount_paise: row.amount_paise,
+    paid_by: row.paid_by,
+    created_by: row.created_by,
+    created_at: row.created_at,
+    splits: row.expense_splits.map((s) => ({
+      member_id: s.member_id,
+      member_name: s.member?.display_name ?? s.member?.profile?.name ?? "Unknown",
+      share_paise: s.share_paise,
+    })),
+  };
+}
+
+export async function updateExpense(
+  expenseId: string,
+  description: string,
+  amountPaise: number,
+  paidByMemberId: string,
+  splitMemberIds: string[],
+  idempotencyKey: string,
+) {
+  const { data, error } = await supabase.rpc("update_expense", {
+    p_expense_id: expenseId,
+    p_description: description,
+    p_amount_paise: amountPaise,
+    p_paid_by: paidByMemberId,
+    p_member_ids: splitMemberIds,
+    p_idempotency_key: idempotencyKey,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteExpense(expenseId: string, idempotencyKey: string) {
+  const { data, error } = await supabase.rpc("delete_expense", {
+    p_expense_id: expenseId,
     p_idempotency_key: idempotencyKey,
   });
   if (error) throw error;
