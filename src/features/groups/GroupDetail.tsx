@@ -3,6 +3,8 @@ import { COLORS_LIGHT as COLORS } from "../../shared/theme/colors";
 import { formatPaise } from "../../shared/lib/money";
 import { useSession } from "../auth/useSession";
 import { useMembers } from "./useMembers";
+import { useBalances } from "./useBalances";
+import { MemberRow } from "./MemberRow";
 import { AddMemberSheet } from "./AddMemberSheet";
 import { useExpenses } from "../expenses/useExpenses";
 import { AddExpenseSheet } from "../expenses/AddExpenseSheet";
@@ -11,6 +13,7 @@ import { InviteSheet } from "../invites/InviteSheet";
 export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; groupName: string; onBack: () => void }) {
   const { session } = useSession();
   const { data: members, isLoading: membersLoading, error: membersError } = useMembers(groupId);
+  const { data: balances } = useBalances(groupId);
   const { data: expenses, isLoading: expensesLoading, error: expensesError } = useExpenses(groupId);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -80,22 +83,9 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
 
         {membersLoading && <p style={{ color: COLORS.inkSoft, fontSize: 13 }}>Loading…</p>}
         {membersError && <p style={{ color: COLORS.red, fontSize: 13 }}>Couldn't load the people in this group.</p>}
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
           {members?.map((m) => (
-            <span
-              key={m.id}
-              style={{
-                background: m.is_ghost ? COLORS.goldSoft : COLORS.chip,
-                color: COLORS.ink,
-                borderRadius: 999,
-                padding: "5px 11px",
-                fontSize: 12.5,
-                fontWeight: 600,
-              }}
-            >
-              {m.name}
-              {m.is_ghost && <span style={{ color: COLORS.gold, fontWeight: 400 }}> · no account</span>}
-            </span>
+            <MemberRow key={m.id} groupId={groupId} member={m} balancePaise={balances?.[m.id]} isAdmin={isAdmin} />
           ))}
         </div>
 
