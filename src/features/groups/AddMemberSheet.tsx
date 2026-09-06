@@ -4,6 +4,7 @@ import { Field, PrimaryButton, Notice } from "../../shared/components/formContro
 import { inputStyle } from "../../shared/theme/inputStyle";
 import { newIdempotencyKey } from "../../lib/api/idempotency";
 import { useAddGhostMember } from "./useMembers";
+import { getErrorMessage } from "../../shared/lib/errors";
 
 export function AddMemberSheet({ groupId, onClose }: { groupId: string; onClose: () => void }) {
   const [name, setName] = useState("");
@@ -22,7 +23,7 @@ export function AddMemberSheet({ groupId, onClose }: { groupId: string; onClose:
       await addMember.mutateAsync({ name: name.trim(), idempotencyKey });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not add that person.");
+      setError(getErrorMessage(err, "Could not add that person."));
     }
   }
 

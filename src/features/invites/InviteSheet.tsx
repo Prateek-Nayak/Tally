@@ -5,6 +5,7 @@ import { inputStyle } from "../../shared/theme/inputStyle";
 import { COLORS_LIGHT as COLORS } from "../../shared/theme/colors";
 import { newIdempotencyKey } from "../../lib/api/idempotency";
 import { useActiveInviteLink, useCreateInviteLink, useRevokeInviteLink, useInviteByEmail } from "./useInvites";
+import { getErrorMessage } from "../../shared/lib/errors";
 
 export function InviteSheet({
   groupId,
@@ -45,7 +46,7 @@ export function InviteSheet({
     try {
       await createLink.mutateAsync(newIdempotencyKey());
     } catch (err) {
-      setLinkActionError(err instanceof Error ? err.message : "Could not generate the link.");
+      setLinkActionError(getErrorMessage(err, "Could not generate the link."));
     }
   }
 
@@ -54,7 +55,7 @@ export function InviteSheet({
     try {
       await revokeLink.mutateAsync(newIdempotencyKey());
     } catch (err) {
-      setLinkActionError(err instanceof Error ? err.message : "Could not revoke the link.");
+      setLinkActionError(getErrorMessage(err, "Could not revoke the link."));
     }
   }
 
@@ -69,7 +70,7 @@ export function InviteSheet({
       setEmail("");
       setEmailKey(newIdempotencyKey()); // fresh key for the next invite
     } catch (err) {
-      setEmailError(err instanceof Error ? err.message : "Could not send the invite.");
+      setEmailError(getErrorMessage(err, "Could not send the invite."));
     }
   }
 

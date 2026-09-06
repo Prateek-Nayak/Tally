@@ -7,6 +7,7 @@ import { newIdempotencyKey } from "../../lib/api/idempotency";
 import { rupeesToPaise } from "../../shared/lib/money";
 import type { Member } from "../groups/memberTypes";
 import { useAddExpense } from "./useExpenses";
+import { getErrorMessage } from "../../shared/lib/errors";
 
 function ChipToggle({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
@@ -71,7 +72,7 @@ export function AddExpenseSheet({
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not add the expense.");
+      setError(getErrorMessage(err, "Could not add the expense."));
     }
   }
 

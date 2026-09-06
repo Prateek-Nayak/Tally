@@ -4,6 +4,7 @@ import { COLORS_LIGHT as COLORS } from "../../shared/theme/colors";
 import { PrimaryButton, Notice } from "../../shared/components/formControls";
 import { newIdempotencyKey } from "../../lib/api/idempotency";
 import { previewInviteLink, joinGroupViaLink } from "./invitesApi";
+import { getErrorMessage } from "../../shared/lib/errors";
 
 export function JoinViaLink({
   code,
@@ -30,7 +31,7 @@ export function JoinViaLink({
       const member = (await joinGroupViaLink(code, idempotencyKey)) as { group_id: string };
       onJoined(member.group_id, data?.group_name ?? "");
     } catch (err) {
-      setJoinError(err instanceof Error ? err.message : "Could not join the group.");
+      setJoinError(getErrorMessage(err, "Could not join the group."));
     } finally {
       setJoining(false);
     }
@@ -58,7 +59,7 @@ export function JoinViaLink({
 
         {error && (
           <>
-            <Notice kind="error">{error instanceof Error ? error.message : "This invite link isn't valid."}</Notice>
+            <Notice kind="error">{getErrorMessage(error, "This invite link isn't valid.")}</Notice>
             <PrimaryButton busy={false} onClick={onCancel} type="button">
               Back to my groups
             </PrimaryButton>

@@ -4,6 +4,7 @@ import { Field, PrimaryButton, LinkButton, Notice } from "../../shared/component
 import { inputStyle } from "../../shared/theme/inputStyle";
 import { signIn, signUp, requestPasswordReset, updatePassword } from "./authApi";
 import { validateEmail, validatePassword, validateName } from "./validators";
+import { getErrorMessage } from "../../shared/lib/errors";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -40,7 +41,7 @@ export function AuthScreen({ isRecovery }: Props) {
       await updatePassword(newPassword);
       setInfo("Password updated. You're signed in.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update password.");
+      setError(getErrorMessage(err, "Could not update password."));
     } finally {
       setBusy(false);
     }
@@ -57,7 +58,7 @@ export function AuthScreen({ isRecovery }: Props) {
       setInfo("Check your email for a password reset link.");
       setMode("login");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send reset email.");
+      setError(getErrorMessage(err, "Could not send reset email."));
     } finally {
       setBusy(false);
     }
@@ -90,7 +91,7 @@ export function AuthScreen({ isRecovery }: Props) {
         await signIn(email.trim(), password);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed.");
+      setError(getErrorMessage(err, "Authentication failed."));
     } finally {
       setBusy(false);
     }

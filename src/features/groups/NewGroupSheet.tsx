@@ -4,6 +4,7 @@ import { Field, PrimaryButton, Notice } from "../../shared/components/formContro
 import { inputStyle } from "../../shared/theme/inputStyle";
 import { newIdempotencyKey } from "../../lib/api/idempotency";
 import { useCreateGroup } from "./useGroups";
+import { getErrorMessage } from "../../shared/lib/errors";
 
 export function NewGroupSheet({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
@@ -24,7 +25,7 @@ export function NewGroupSheet({ onClose }: { onClose: () => void }) {
       await createGroup.mutateAsync({ name: name.trim(), idempotencyKey });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create the group.");
+      setError(getErrorMessage(err, "Could not create the group."));
     }
   }
 
