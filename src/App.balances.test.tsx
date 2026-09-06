@@ -81,3 +81,26 @@ describe("Balances and removal", () => {
     }
   });
 });
+
+describe("Balances query failure - fail closed, not open", () => {
+  it("keeps Remove disabled when the balance can't be verified at all", async () => {
+    // This is the exact bug found in production: an unknown balance
+    // (query failed) was being treated as "settled", which let Remove
+    // become clickable when it should stay blocked until proven safe.
+    rpcMock.mockImplementationOnce((async (fn: string) => {
+      if (fn === "get_group_balances")
+        return { data: null, error: { message: "structure of query does not match function result type" } };
+      return { data: null, error: null };
+    }) as typeof rpcMock);
+
+    renderApp();
+    await waitFor(() => screen.getByText("Goa trip"));
+    await userEvent.click(screen.getByText("Goa trip"));
+
+    await waitFor(() => expect(screen.getByText(/Couldn't check balances/)).toBeTruthy());
+    const removeButtons = screen.getAllByText("Remove") as HTMLButtonElement[];
+    for (const btn of removeButtons) {
+      expect(btn.disabled).toBe(true);
+    }
+  });
+});

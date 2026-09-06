@@ -21,8 +21,19 @@ export function MemberRow({
   const [error, setError] = useState("");
   const removeMember = useRemoveMember(groupId);
 
-  const settled = balancePaise === 0 || balancePaise === undefined;
-  const canRemove = isAdmin && settled;
+  // Deliberately strict: only an explicitly-confirmed zero balance
+  // enables removal. Treating "unknown" (still loading, or the balances
+  // query failed) the same as "settled" would let someone attempt
+  // removal before we actually know it's safe - the RPC's own check is
+  // the real backstop, but the UI shouldn't invite an attempt it can't
+  // yet vouch for.
+  const canRemove = isAdmin && balancePaise === 0;
+  const removeTitle =
+    balancePaise === undefined
+      ? "Checking balance…"
+      : balancePaise !== 0
+        ? "They have an unsettled balance"
+        : "Remove from group";
 
   async function handleConfirmRemove() {
     setError("");
@@ -73,7 +84,7 @@ export function MemberRow({
               type="button"
               onClick={() => setConfirming(true)}
               disabled={!canRemove}
-              title={canRemove ? "Remove from group" : "They have an unsettled balance"}
+              title={removeTitle}
               style={{
                 background: "transparent",
                 border: "none",

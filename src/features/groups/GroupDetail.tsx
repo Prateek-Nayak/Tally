@@ -13,7 +13,7 @@ import { InviteSheet } from "../invites/InviteSheet";
 export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; groupName: string; onBack: () => void }) {
   const { session } = useSession();
   const { data: members, isLoading: membersLoading, error: membersError } = useMembers(groupId);
-  const { data: balances } = useBalances(groupId);
+  const { data: balances, error: balancesError } = useBalances(groupId);
   const { data: expenses, isLoading: expensesLoading, error: expensesError } = useExpenses(groupId);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -83,6 +83,9 @@ export function GroupDetail({ groupId, groupName, onBack }: { groupId: string; g
 
         {membersLoading && <p style={{ color: COLORS.inkSoft, fontSize: 13 }}>Loading…</p>}
         {membersError && <p style={{ color: COLORS.red, fontSize: 13 }}>Couldn't load the people in this group.</p>}
+        {balancesError && (
+          <p style={{ color: COLORS.red, fontSize: 13 }}>Couldn't check balances — Remove is disabled until this works.</p>
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
           {members?.map((m) => (
             <MemberRow key={m.id} groupId={groupId} member={m} balancePaise={balances?.[m.id]} isAdmin={isAdmin} />
